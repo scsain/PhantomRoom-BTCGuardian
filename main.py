@@ -7,7 +7,7 @@ import numpy as np
 from zoneinfo import ZoneInfo
 
 # 1. 优先从环境变量中获取飞书 Webhook 地址，确保代码开源安全!
-FEISHU_WEBHOOK_URL = os.environ.get("TOM_FEISHU_WEBHOOK_URL", "")
+FEISHU_WEBHOOK_URL = os.environ.get("TOM_FEISHU_WEBHOOK_URL")
 
 SYMBOL = "BTC/USDT"
 TIMEFRAMES = ['12h', '1d', '1w', '1m']
