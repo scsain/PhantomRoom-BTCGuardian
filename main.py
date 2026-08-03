@@ -26,18 +26,9 @@ def get_time_str():
     return f"[北京 {bj_str} | 美东 {us_str}]"
 
 # 初始化交易所实例（移除代理和本地节点绑定，GitHub Actions 在云端可直连）
-exchange = ccxt.binance({
+exchange = ccxt.okx({
     'enableRateLimit': True,
     'timeout': 15000,
-    'options': {
-        'defaultType': 'spot', # 明确指定只请求现货
-    },
-    
-    'urls': {
-        'api': {
-            'public': 'https://data-api.binance.vision/api/v3',
-        }
-    }
 })
 
 # ==================== 技术指标计算函数 ====================
