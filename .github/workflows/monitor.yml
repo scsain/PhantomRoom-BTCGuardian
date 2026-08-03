@@ -2,8 +2,8 @@ name: BTC Indicator Monitor
 
 on:
   schedule:
-    # 每 1 分钟自动运行一次
-    - cron: '*/1 * * * *'
+    # 每 3 分钟自动运行一次
+    - cron: '*/3 * * * *'
   workflow_dispatch: # 支持在 GitHub 页面手动点按钮触发测试
 
 jobs:
