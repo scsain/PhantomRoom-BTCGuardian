@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 FEISHU_WEBHOOK_URL = os.environ.get("TOM_FEISHU_WEBHOOK_URL", "")
 
 SYMBOL = "BTC/USDT"
-TIMEFRAMES = ['3m', '15m', '30m', '1h', '4h']
+TIMEFRAMES = ['12h', '1d', '1w', '1m']
 
 def get_time_str():
     try:
