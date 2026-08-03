@@ -29,6 +29,10 @@ def get_time_str():
 exchange = ccxt.binance({
     'enableRateLimit': True,
     'timeout': 15000,
+    'options': {
+        'defaultType': 'spot', # 明确指定只请求现货
+    },
+    
     'urls': {
         'api': {
             'public': 'https://data-api.binance.vision/api/v3',
