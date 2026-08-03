@@ -1,0 +1,29 @@
+name: BTC Indicator Monitor
+
+on:
+  schedule:
+    # 每 1 分钟自动运行一次
+    - cron: '*/1 * * * *'
+  workflow_dispatch: # 支持在 GitHub 页面手动点按钮触发测试
+
+jobs:
+  run-monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Monitor Script
+        env:
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+        run: python main.py
