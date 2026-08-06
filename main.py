@@ -14,10 +14,11 @@ FEISHU_WEBHOOK_URL = os.environ.get("TOM_FEISHU_WEBHOOK_URL")
 
 # 如果只想监控 12 小时，请保持此配置；需要其他周期再追加，例如 "1d"。
 SYMBOLS = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
-TIMEFRAMES = ["12h", "1d", "1w"]
+TIMEFRAMES = ["12h", "1d", "1w", "1M"]
 OHLCV_LIMIT = 300
 STATE_FILE = Path("state/sent_signals.json")
 HEALTH_REPORT_INTERVAL = datetime.timedelta(days=2)
+HEALTH_REPORT_HOUR_BEIJING = 18
 
 exchange = ccxt.okx({"enableRateLimit": True, "timeout": 15_000})
 
@@ -160,8 +161,11 @@ def check_signals():
 
 
 def send_health_report(state, checked_count, errors):
-    """每 48 小时最多发送一次运行状态；需要 GitHub Actions 缓存 state/ 才可跨运行生效。"""
+    """每 48 小时在北京时间 18 点发送一次状态；需要 Actions 缓存 state/。"""
     now = datetime.datetime.now(ZoneInfo("UTC"))
+    beijing_now = now.astimezone(ZoneInfo("Asia/Shanghai"))
+    if beijing_now.hour != HEALTH_REPORT_HOUR_BEIJING:
+        return
     last_report = state.get("_last_health_report_at")
     if last_report:
         try:
