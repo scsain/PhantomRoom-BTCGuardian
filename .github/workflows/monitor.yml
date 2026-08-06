@@ -2,13 +2,14 @@ name: BTC Indicator Monitor
 
 on:
   schedule:
-    # 每 6 分钟自动运行一次
-    - cron: '*/6 * * * *'
-  workflow_dispatch: # 支持在 GitHub 页面手动点按钮触发测试
+    # 每 10 分钟运行一次监控
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
 
 jobs:
   run-monitor:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -23,7 +24,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # 读取上一次运行保存的去重与48小时状态记录
+      - name: Restore monitor state
+        uses: actions/cache/restore@v4
+        with:
+          path: state
+          key: monitor-state-${{ github.run_id }}
+          restore-keys: |
+            monitor-state-
+
       - name: Run Monitor Script
         env:
           TOM_FEISHU_WEBHOOK_URL: ${{ secrets.TOM_FEISHU_WEBHOOK_URL }}
         run: python main.py
+
+      # 无论脚本成功或失败，都尝试保存最新状态
+      - name: Save monitor state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: state
+          key: monitor-state-${{ github.run_id }}
