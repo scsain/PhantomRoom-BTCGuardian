@@ -14,7 +14,7 @@ FEISHU_WEBHOOK_URL = os.environ.get("TOM_FEISHU_WEBHOOK_URL")
 
 # 如果只想监控 12 小时，请保持此配置；需要其他周期再追加，例如 "1d"。
 SYMBOLS = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
-TIMEFRAMES = ["12h", "1d", "1w", "1M"]
+TIMEFRAMES = ["12h", "1d", "1w"]
 OHLCV_LIMIT = 300
 STATE_FILE = Path("state/sent_signals.json")
 HEALTH_REPORT_INTERVAL = datetime.timedelta(days=2)
