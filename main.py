@@ -17,6 +17,7 @@ SYMBOLS = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
 TIMEFRAMES = ["12h", "1d", "1w", "1M"]
 OHLCV_LIMIT = 300
 STATE_FILE = Path("state/sent_signals.json")
+HEALTH_REPORT_INTERVAL = datetime.timedelta(days=2)
 
 exchange = ccxt.okx({"enableRateLimit": True, "timeout": 15_000})
 
@@ -98,13 +99,22 @@ def send_feishu_alert(title, text):
 
 def signal_for(latest):
     overbought = latest["adx"] > 2
-    oversold = latest["adx"] > 20 and latest["rsi6"] < 27 and latest["rsi12"] < 30 and latest["k"] < 30 and latest["d"] < 30 and latest["j"] < 25 and latest["stoch_k"] < 25 and latest["stoch_d"] < 25
+    oversold = latest["adx"] > 38 and latest["rsi6"] < 27 and latest["rsi12"] < 30 and latest["k"] < 30 and latest["d"] < 30 and latest["j"] < 25 and latest["stoch_k"] < 25 and latest["stoch_d"] < 25
     return "极端超买" if overbought else "极端超卖" if oversold else None
 
 
 def check_signals():
-    exchange.load_markets()
     state = load_state()
+    errors = []
+    checked_count = 0
+    try:
+        exchange.load_markets()
+    except Exception as exc:
+        errors.append(f"交易所市场加载失败：{exc}")
+        print(errors[-1])
+        send_health_report(state, checked_count, errors)
+        return
+
     for symbol in SYMBOLS:
         asset = symbol.split("/")[0]
         for timeframe in TIMEFRAMES:
@@ -116,6 +126,7 @@ def check_signals():
                 df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
                 df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
                 latest = calculate_indicators(df).iloc[-1]
+                checked_count += 1
                 signal = signal_for(latest)
                 candle_time = latest["datetime"].strftime("%Y-%m-%d %H:%M:%S UTC")
                 print(f"{get_time_str()} {symbol} {timeframe} 已收线: ${latest['close']:,.4f} | 信号: {signal or '无'}")
@@ -141,8 +152,47 @@ def check_signals():
                     state[state_key] = candle_id
                     save_state(state)
             except Exception as exc:
-                print(f"[{symbol} {timeframe}] 数据获取或计算出错: {exc}")
+                error_message = f"[{symbol} {timeframe}] 数据获取或计算出错: {exc}"
+                errors.append(error_message)
+                print(error_message)
+
+    send_health_report(state, checked_count, errors)
+
+
+def send_health_report(state, checked_count, errors):
+    """每 48 小时最多发送一次运行状态；需要 GitHub Actions 缓存 state/ 才可跨运行生效。"""
+    now = datetime.datetime.now(ZoneInfo("UTC"))
+    last_report = state.get("_last_health_report_at")
+    if last_report:
+        try:
+            if now - datetime.datetime.fromisoformat(last_report) < HEALTH_REPORT_INTERVAL:
+                return
+        except ValueError:
+            pass
+
+    if errors:
+        title = "⚠️【监控系统运行异常】"
+        details = "\n".join(f"• {error}" for error in errors[:10])
+        text = (
+            f"检查时间: {get_time_str()}\n"
+            f"成功检查: {checked_count}/{len(SYMBOLS) * len(TIMEFRAMES)} 个币种周期\n"
+            f"异常数量: {len(errors)}\n"
+            f"------------------------\n{details}"
+        )
+    else:
+        title = "✅【监控系统正常运行】"
+        text = (
+            f"检查时间: {get_time_str()}\n"
+            f"本监控系统运行正常。\n"
+            f"已成功检查 {checked_count} 个币种周期：BTC、ETH、SOL。\n"
+            f"监控周期: {', '.join(TIMEFRAMES)}"
+        )
+
+    if send_feishu_alert(title, text):
+        state["_last_health_report_at"] = now.isoformat()
+        save_state(state)
 
 
 if __name__ == "__main__":
     check_signals()
+
