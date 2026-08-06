@@ -98,7 +98,7 @@ def send_feishu_alert(title, text):
 
 
 def signal_for(latest):
-    overbought = latest["adx"] > 2
+    overbought = latest["adx"] > 20 and latest["rsi6"] > 73 and latest["rsi12"] > 70 and latest["k"] > 70 and latest["d"] > 70 and latest["j"] > 75 and latest["stoch_k"] > 75 and latest["stoch_d"] > 75
     oversold = latest["adx"] > 38 and latest["rsi6"] < 27 and latest["rsi12"] < 30 and latest["k"] < 30 and latest["d"] < 30 and latest["j"] < 25 and latest["stoch_k"] < 25 and latest["stoch_d"] < 25
     return "极端超买" if overbought else "极端超卖" if oversold else None
 
