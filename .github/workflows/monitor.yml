@@ -25,5 +25,5 @@ jobs:
 
       - name: Run Monitor Script
         env:
-          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          TOM_FEISHU_WEBHOOK_URL: ${{ secrets.TOM_FEISHU_WEBHOOK_URL }}
         run: python main.py
